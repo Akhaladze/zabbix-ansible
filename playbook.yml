@@ -1,0 +1,86 @@
+---
+- hosts: zabbix_servers
+  become: yes
+  tasks:
+    - name: Обновление пакетов и установка зависимостей
+      apt:
+        update_cache: yes
+        name: "{{ item }}"
+        state: present
+      loop:
+        - mariadb-server
+        - mariadb-client
+        - apache2
+        - php
+        - php-mysql
+        - libapache2-mod-php
+        - snmp
+        - php-gd
+        - php-xml
+        - php-bcmath
+        - php-mbstring
+        - php-ldap
+        - php-net-socket
+        - php-gettext
+        - wget
+
+    - name: Добавление репозитория Zabbix
+      apt_repository:
+        repo: "deb http://repo.zabbix.com/zabbix/6.0/ubuntu $(lsb_release -cs) main"
+        state: present
+        filename: zabbix
+
+    - name: Добавление ключа GPG для Zabbix репозитория
+      apt_key:
+        url: "https://repo.zabbix.com/zabbix-official-repo.key"
+        state: present
+
+    - name: Установка Zabbix сервера, веб-интерфейса и агента
+      apt:
+        name:
+          - zabbix-server-mysql
+          - zabbix-frontend-php
+          - zabbix-apache-conf
+          - zabbix-agent
+        state: present
+
+    - name: Создание базы данных Zabbix
+      mysql_db:
+        name: zabbix
+        state: present
+        login_user: root
+        login_password: your_db_root_password
+
+    - name: Создание пользователя базы данных Zabbix
+      mysql_user:
+        name: zabbix
+        password: your_zabbix_db_password
+        priv: "zabbix.*:ALL"
+        state: present
+        login_user: root
+        login_password: your_db_root_password
+
+    - name: Импорт схемы базы данных Zabbix
+      shell: |
+        zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -u zabbix -p'your_zabbix_db_password' zabbix
+      args:
+        executable: /bin/bash
+
+    - name: Настройка Zabbix сервера
+      lineinfile:
+        path: /etc/zabbix/zabbix_server.conf
+        regexp: '^# DBPassword='
+        line: 'DBPassword=your_zabbix_db_password'
+
+    - name: Перезапуск Zabbix сервера и агента
+      service:
+        name: "{{ item }}"
+        state: restarted
+      loop:
+        - zabbix-server
+        - zabbix-agent
+
+    - name: Перезапуск Apache
+      service:
+        name: apache2
+        state: restarted

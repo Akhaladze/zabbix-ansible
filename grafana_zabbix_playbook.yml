@@ -1,0 +1,86 @@
+---
+- hosts: zabbix_servers
+  become: yes
+  tasks:
+    - name: Обновление пакетов
+      apt:
+        update_cache: yes
+
+    - name: Добавление GPG ключа для репозитория Grafana
+      apt_key:
+        url: https://packages.grafana.com/gpg.key
+        state: present
+
+    - name: Добавление репозитория Grafana
+      apt_repository:
+        repo: "deb https://packages.grafana.com/oss/deb stable main"
+        state: present
+
+    - name: Установка Grafana
+      apt:
+        name: grafana
+        state: present
+
+    - name: Установка плагина Zabbix для Grafana
+      grafana_plugin:
+        name: alexanderzobnin-zabbix-app
+        state: present
+
+    - name: Включение и запуск службы Grafana
+      service:
+        name: grafana-server
+        state: started
+        enabled: yes
+
+    - name: Ожидание запуска Grafana
+      wait_for:
+        host: 127.0.0.1
+        port: 3000
+        delay: 10
+        timeout: 60
+        state: started
+
+    - name: Настройка подключения Zabbix в Grafana
+      uri:
+        url: "http://localhost:3000/api/datasources"
+        method: POST
+        user: "admin"
+        password: "admin"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+        body: |
+          {
+            "name": "Zabbix",
+            "type": "alexanderzobnin-zabbix-datasource",
+            "url": "http://{{ zabbix_server_ip }}/zabbix",
+            "access": "proxy",
+            "basicAuth": false,
+            "jsonData": {
+              "username": "{{ zabbix_user }}",
+              "password": "{{ zabbix_password }}"
+            }
+          }
+        status_code: 200
+      ignore_errors: yes  # Игнорируем ошибки, чтобы избежать повторного добавления
+
+    - name: Изменение пароля по умолчанию Grafana
+      uri:
+        url: "http://localhost:3000/api/admin/passwords"
+        method: POST
+        user: "admin"
+        password: "admin"
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+        body: |
+          {
+            "oldPassword": "admin",
+            "newPassword": "{{ grafana_new_password }}"
+          }
+        status_code: 200
+
+    - name: Перезапуск Grafana
+      service:
+        name: grafana-server
+        state: restarted

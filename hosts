@@ -1,0 +1,5 @@
+[zabbix_servers]
+zabbix_host ansible_host=10.10.100.21 ansible_user=gnet
+[zabbix_agents]
+agent_host_1 ansible_host=agent_ip_1 ansible_user=your_user
+agent_host_2 ansible_host=agent_ip_2 ansible_user=your_user
