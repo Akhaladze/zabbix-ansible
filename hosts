@@ -2,4 +2,3 @@
 zabbix_host ansible_host=192.168.124.160 ansible_user=gnet ansible_become_password=Frdfkfyu
 [zabbix_agents]
 agent_host_1 ansible_host=192.168.124.227 ansible_user=gnet ansible_become_password=Frdfkfyu
-
