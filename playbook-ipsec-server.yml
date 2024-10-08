@@ -42,12 +42,12 @@
             rightsourceip={{ clients_subnet }}
             auto=add
 
-    - name: Create ipsec.secrets file
-      copy:
-        dest: /etc/ipsec.secrets
-        content: |
-          {{ server_ip }} : PSK "{{ psk_key }}"
-      mode: '0600'
+    #- name: Create ipsec.secrets file
+    #  copy:
+    #    dest: /etc/ipsec.secrets
+    #    content: |
+    #      {{ server_ip }} : PSK "{{ psk_key }}"
+    #  mode: '0600'
 
     - name: Restart strongSwan service
       service:
