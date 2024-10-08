@@ -3,9 +3,10 @@
   become: yes
   vars:
     ansible_python_interpreter: /usr/bin/python3
+    serverIp: 192.168.124.160
 
   tasks:
-    - name: Обновление пакетов и установка зависимостей
+    - name: Update system packages
       apt:
         update_cache: yes
         name: "{{ item }}"
@@ -18,44 +19,44 @@
         - curl
         - nmap
 
-    - name: Обновление пакетов и установка зависимостей
+    - name: Install depended packages
       apt:
         update_cache: yes
 
-    - name: Загрузка пакета Zabbix Agent 6.4
+    - name: Download Zabbix Agent 6.4
       get_url:
         url: "https://repo.zabbix.com/zabbix/6.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.4-1+ubuntu22.04_all.deb"
         dest: "/tmp/zabbix-release_6.4-1+ubuntu22.04_all.deb"
 
-    - name: Установка пакета Zabbix 6.4
+    - name: Install Zabbix Agent 6.4
       apt:
         deb: "/tmp/zabbix-release_6.4-1+ubuntu22.04_all.deb"
       register: install_zabbix_agent
-      ignore_errors: yes  # Игнорируем ошибки, если пакет уже установлен
-    - name: Установка Zabbix агента
+      ignore_errors: yes  # ignore if it exists
+    - name: Enable Zabbix agent 
       apt:
         name: zabbix-agent
         state: present
 
-    - name: Настройка Zabbix агента
+    - name: Add zabbix server ip Zabbix agent
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: '^Server='
-        line: 'Server=192.168.124.160'
+        line: 'Server={{ serverIp }}'
 
-    - name: Настройка Zabbix агента (добавление ServerActive)
+    - name: Setting up Zabbix агента (ServerActive)
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: '^# ServerActive='
-        line: 'ServerActive=192.168.124.160'
+        line: 'ServerActive={{ serverIp }}'
 
-    - name: Настройка Zabbix агента (Hostname)
+    - name: Setting up Zabbix agent (Hostname)
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: '^Hostname='
         line: 'Hostname={{ ansible_hostname }}'
 
-    - name: Перезапуск Zabbix агента
+    - name: Restart Zabbix agent
       service:
         name: zabbix-agent
         state: restarted
