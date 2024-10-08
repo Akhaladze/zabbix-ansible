@@ -51,7 +51,7 @@
 
     - name: Restart strongSwan service
       service:
-        name: strongswan
+        name: ipsec
         state: restarted
         enabled: yes
 
