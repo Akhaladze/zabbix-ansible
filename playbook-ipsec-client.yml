@@ -35,12 +35,12 @@
             keyingtries=%forever
             mobike=no
 
-   # - name: Create ipsec.secrets file for client
-   #   copy:
-   #     dest: /etc/ipsec.secrets
-   #     content: |
-   #       : PSK "{{ psk_key }}"
-   #   mode: '0600'
+    - name: Create ipsec.secrets file
+      copy:
+        dest: /etc/ipsec.secrets
+        content: |
+          : PSK "{{ psk_key }}"
+        mode: '0600'
 
     - name: Restart strongSwan service
       service:
