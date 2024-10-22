@@ -1,15 +1,8 @@
 ---
 - hosts: zabbix_servers
   become: yes
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-    serviceName: ZabbixPlatform
-    serverIp: 192.168.124.160
-    DBPassword: "S!uper_1P@ssw0rd@2023!"
-    api_url: "http://{{ serverIp }}/zabbix/api_jsonrpc.php"
-    api_user: "Admin"
-    api_password: "zabbix"
-    api_token: ""
+  vars_files:
+    - zabbix-server.env
   tasks:
     - name: Update system packages
       apt:
