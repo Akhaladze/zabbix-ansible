@@ -2,37 +2,37 @@
 - hosts: zabbix_servers
   become: yes
   tasks:
-    - name: Обновление пакетов
+    - name: Update packages
       apt:
         update_cache: yes
 
-    - name: Добавление GPG ключа для репозитория Grafana
+    - name: Add GPG key for Grafana
       apt_key:
         url: https://packages.grafana.com/gpg.key
         state: present
 
-    - name: Добавление репозитория Grafana
+    - name: Add Grafana apt_repository
       apt_repository:
         repo: "deb https://packages.grafana.com/oss/deb stable main"
         state: present
 
-    - name: Установка Grafana
+    - name: Install Grafana
       apt:
         name: grafana
         state: present
 
-    - name: Установка плагина Zabbix для Grafana
+    - name: Install plunin Zabbix for Grafana
       grafana_plugin:
         name: alexanderzobnin-zabbix-app
         state: present
 
-    - name: Включение и запуск службы Grafana
+    - name: Start service for Grafana
       service:
         name: grafana-server
         state: started
         enabled: yes
 
-    - name: Ожидание запуска Grafana
+    - name: Await starting Grafana
       wait_for:
         host: 127.0.0.1
         port: 3000
@@ -40,7 +40,7 @@
         timeout: 60
         state: started
 
-    - name: Настройка подключения Zabbix в Grafana
+    - name: Setting up Zabbix in Grafana
       uri:
         url: "http://localhost:3000/api/datasources"
         method: POST
@@ -62,9 +62,9 @@
             }
           }
         status_code: 200
-      ignore_errors: yes  # Игнорируем ошибки, чтобы избежать повторного добавления
+      ignore_errors: yes 
 
-    - name: Изменение пароля по умолчанию Grafana
+    - name: Change defualt password for Grafana
       uri:
         url: "http://localhost:3000/api/admin/passwords"
         method: POST
@@ -80,7 +80,7 @@
           }
         status_code: 200
 
-    - name: Перезапуск Grafana
+    - name: Restart Grafana
       service:
         name: grafana-server
         state: restarted

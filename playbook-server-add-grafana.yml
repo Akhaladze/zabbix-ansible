@@ -1,4 +1,56 @@
-#---
-# Install grafana_dashboard:
-# Init grafana_dashboard:
-# Check installaition
+---
+- hosts: zabbix_servers
+  become: yes
+  vars:
+    serverIp: 192.168.124.160
+
+  tasks:
+    - name: Добавление GPG ключа для репозитория Grafana
+      apt_key:
+        url: https://packages.grafana.com/gpg.key
+        state: present
+
+    - name: Добавление репозитория Grafana
+      apt_repository:
+        repo: "deb https://packages.grafana.com/oss/deb stable main"
+        state: present
+        update_cache: yes
+
+    - name: Установка Grafana
+      apt:
+        name: grafana
+        state: present
+
+    - name: Запуск и включение Grafana
+      systemd:
+        name: grafana-server
+        enabled: yes
+        state: started
+
+    - name: Установка Zabbix плагина для Grafana
+      grafana_plugin:
+        name: alexanderzobnin-zabbix-app
+        state: present
+
+    - name: Создание конфигурации для подключения Grafana к Zabbix
+      copy:
+        dest: /etc/grafana/provisioning/datasources/zabbix.yml
+        content: |
+          apiVersion: 1
+          datasources:
+          - name: Zabbix
+            type: alexanderzobnin-zabbix-datasource
+            url: http://{{ serverIp }}/zabbix
+            access: proxy
+            jsonData:
+              username: "Admin"
+              password: "zabbix"
+            secureJsonData:
+              password: "zabbix"
+      notify: Перезапуск Grafana
+
+  handlers:
+    - name: Перезапуск Grafana
+      systemd:
+        name: grafana-server
+        state: restarted

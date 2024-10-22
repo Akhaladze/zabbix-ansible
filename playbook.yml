@@ -95,7 +95,7 @@
         line: 'DBHost=localhost'
       become: yes
 
-    - name: Создание файла zabbix.conf.php с конфигурацией для веб-интерфейса
+    - name: Create zabbix.conf.php
       copy:
         dest: /etc/zabbix/web/zabbix.conf.php
         content: |
@@ -162,7 +162,7 @@
         group: root
         mode: '0644'
 
-    - name: Перезапуск Zabbix сервера и агента
+    - name: Restart Zabbix srv and agn
       service:
         name: "{{ item }}"
         state: restarted
@@ -170,7 +170,7 @@
         - zabbix-server
         - zabbix-agent
 
-    - name: Перезапуск Apache
+    - name: Restart Apache
       service:
         name: apache2
         state: restarted

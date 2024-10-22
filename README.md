@@ -11,9 +11,14 @@ ansible-playbook -i hosts playbook.yml
 Install Zabbix agents
 ansible-playbook -i hosts playbook-agents.yml
 
-#Integrate Zabbix with Grafana 
-grafana_zabbix_playbook.yml
+# Integrate Zabbix with Grafana 
+ansible-playbook -i hosts playbook-server-grafana.yml
+
+# Or Another tested approch to add Grafana to Zabbix
+ansible-playbook -i hosts playbook-server-grafana.yml
 
 TO.DO.
-- params via ENV
-- test playbook
+- params via ENV : done
+- test playbook  : done
+- Discovery research & tests
+- Implement MAC Address based client logical binding insted IP based client analitycs and Zabbix settings.
