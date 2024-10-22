@@ -1,3 +1,42 @@
-#---
-# Init zabbix server:
-# Check zabbix:
+---
+- hosts: zabbix_servers
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    serviceName: ZabbixPlatform
+    serverIp: 192.168.124.160
+    DBPassword: "S!uper_1P@ssw0rd@2023!"
+    api_url: "http://{{ serverIp }}/zabbix/api_jsonrpc.php"
+    api_user: "Admin"
+    api_password: "zabbix"
+    api_token: ""
+  tasks:
+    - name: Update system packages
+      apt:
+        update_cache: yes
+
+    - name: Получение API токена
+      uri:
+        url: "{{ api_url }}"
+        method: POST
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          method: "user.login"
+          params:
+            user: "{{ api_user }}"
+            password: "{{ api_password }}"
+          id: 1
+          auth: null
+        headers:
+          Content-Type: "application/json"
+      register: auth_response
+
+    - name: Отладка ответа на запрос токена
+      debug:
+        var: auth_response
+
+    - name: Сохранение API токена
+      set_fact:
+        api_token: "{{ auth_response.json.result }}"
+      when: auth_response.json.result is defined
