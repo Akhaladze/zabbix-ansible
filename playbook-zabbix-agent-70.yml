@@ -1,0 +1,98 @@
+---
+- hosts: zabbix_agents
+  become: yes
+  vars_files:
+    - zabbix-agent.env
+
+  tasks:
+    - name: Update system packages
+      apt:
+        update_cache: yes
+        name: "{{ item }}"
+        state: present
+      loop:
+        - snmp
+        - wget
+        - mc
+        - curl
+        - nmap
+        - ufw
+
+    - name: Allow port 10050 (Zabbix Agent)
+      ufw:
+        rule: allow
+        port: 10050
+        proto: tcp
+    
+    - name: Allow port 10051 (Zabbix Server) 
+      ufw:
+        rule: allow
+        port: 10051
+        proto: tcp
+
+    - name: Allow port 22 (SSH)
+      ufw:
+        rule: allow
+        port: 22
+        proto: tcp
+
+    - name: Allow port 162 (SNMP)
+      ufw:
+        rule: allow
+        port: 162
+        proto: udp
+  
+    - name: Enable and restart ufw
+      ufw:
+        state: enabled
+        policy: allow
+
+
+    - name: Install depended packages
+      apt:
+        update_cache: yes
+
+    - name: Download Zabbix Agent 7.0
+      get_url:
+        url: "https://repo.zabbix.com/zabbix/7.0/debian/pool/main/z/zabbix-release/zabbix-release_latest+debian12_all.deb"
+        dest: "/tmp/zabbix-release_latest+debian12_all.deb"
+
+    - name: Install Zabbix Agent 7.0
+      apt:
+        deb: "/tmp/zabbix-release_latest+debian12_all.deb"
+      register: install_zabbix_agent
+      ignore_errors: yes
+      
+    - name: Enable Zabbix agent 
+      apt:
+        name: zabbix-agent
+        state: present
+
+    - name: Add zabbix server ip Zabbix agent
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '^Server='
+        line: 'Server={{ serverIp }}'
+
+    - name: Setting up Zabbix агента (ServerActive)
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '^# ServerActive='
+        line: 'ServerActive={{ serverIp }}'
+
+    - name: Setting up Zabbix agent (Hostname)
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '^Hostname='
+        line: 'Hostname={{ ansible_hostname }}'
+
+    - name: Restart Zabbix agent
+      service:
+        name: zabbix-agent
+        state: restarted
+
+
+  handlers:
+    - name: Restart ufw
+      command: ufw reload
+      become: true

@@ -42,7 +42,7 @@
         - nginx
         - php
         - php-mysql
-        - php-fpm
+        - php8.1-fpm
         - snmp
         - php-gd
         - php-xml
@@ -54,6 +54,53 @@
         - mc
         - curl
         - nmap
+        - ufw
+
+
+    - name: Allow port 8080
+      ufw:
+        rule: allow
+        port: 8080
+        proto: tcp
+
+    - name: Allow port 10050 (Zabbix Agent)
+      ufw:
+        rule: allow
+        port: 10050
+        proto: tcp
+    
+    - name: Allow port 10051 (Zabbix Agent) 
+      ufw:
+        rule: allow
+        port: 10051
+        proto: tcp
+
+    - name: Allow port 22 (SSH)
+      ufw:
+        rule: allow
+        port: 22
+        proto: tcp
+
+    - name: Allow port 162 (SNMP)
+      ufw:
+        rule: allow
+        port: 162
+        proto: udp
+  
+    - name: Allow port 3000 (Grafana HTTP)
+      ufw:
+        rule: allow
+        port: 3000
+        proto: tcp
+
+    - name: Enable ufw
+      ufw:
+        state: enabled
+        policy: allow
+
+    - name: Restart ufw
+      command: ufw reload
+  
 
     - name: Download Zabbix 7.0 LTS
       get_url:
@@ -88,13 +135,13 @@
 
     - name: DB creation (Unix socket)
       shell: |
-        echo "CREATE DATABASE IF NOT EXISTS zabbix;" | mysql --user=root
+        echo "CREATE DATABASE IF NOT EXISTS zabbix character set utf8mb4 collate utf8mb4_bin;" | mysql --user=root
       become: yes
       become_user: root
 
     - name: Create DB user (Unix socket)
       shell: |
-        echo "CREATE USER IF NOT EXISTS 'zabbix'@'localhost' IDENTIFIED BY '{{ dbPassword }}'; GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost'; FLUSH PRIVILEGES;" | mysql --user=root
+        echo "CREATE USER IF NOT EXISTS 'zabbix'@'localhost' IDENTIFIED BY '{{ dbPassword }}'; GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost'; set global log_bin_trust_function_creators = 1;" | mysql --user=root
       become: yes
       become_user: root
 
@@ -103,21 +150,28 @@
       args:
         executable: /bin/bash
 
-
-    - name: Setup Zabbix server Add vars to config
-      lineinfile:
-        path: /etc/zabbix/zabbix_server.conf
-        regexp: '^# DBPassword='
-        line: 'DBPassword={{ dbPassword }}'
+    - name: Disable log_bin_trust_function_creators option after importing database schema.
+      shell: |
+        echo "set global log_bin_trust_function_creators = 0;" | mysql --user=root
       become: yes
-    
-    - name: Setup Zabbix server Add vars to config
-      lineinfile:
-        path: /etc/zabbix/zabbix_server.conf
-        regexp: '^# DBHost='
-        line: 'DBHost=localhost'
-      become: yes
-
+      become_user: root
+    - name: Create zabbix.conf.php
+      copy:
+        dest: /etc/zabbix/web/zabbix.conf.php
+        content: |
+          LogFile=/var/log/zabbix/zabbix_server.log
+          LogFileSize=0
+          PidFile=/run/zabbix/zabbix_server.pid
+          DBHost=localhost
+          DBName=zabbix
+          DBUser=zabbix
+          DBPassword=Password2023!
+          SNMPTrapperFile=/var/log/snmptrap/snmptrap.log
+          StatsAllowedIP=127.0.0.1,192.168.124.0/24,10.0.0.0/8
+        owner: root
+        group: root
+        mode: '0644'
+            
     - name: Create zabbix.conf.php
       copy:
         dest: /etc/zabbix/web/zabbix.conf.php
@@ -128,7 +182,7 @@
           $DB['TYPE']			= 'MYSQL';
           $DB['SERVER']			= 'localhost';
           $DB['PORT']			= '0';
-          $DB['DATABASE']			= 'zabbix';
+          $DB['DATABASE']			= '{{ zabbixDBname }}';
           $DB['USER']			= 'zabbix';
           $DB['PASSWORD']			= '{{ dbPassword }}';
 
@@ -184,7 +238,7 @@
         owner: root
         group: root
         mode: '0644'
-    - name: Change listen и server_name в /etc/zabbix/nginx.conf
+    - name: Change listen and server_name в /etc/zabbix/nginx.conf
       lineinfile:
         path: /etc/zabbix/nginx.conf
         regexp: '^#\s*(listen\s+\d+;)'
@@ -199,6 +253,7 @@
         line: 'server_name example.com;'
         state: present
       notify: Restart Nginx
+    
 
     - name: Restart Zabbix srv and agent
       service:
@@ -208,6 +263,7 @@
         - zabbix-server
         - zabbix-agent
         - nginx
+        - php8.1-fpm
 
 
   handlers:
@@ -215,3 +271,7 @@
       systemd:
         name: nginx
         state: restarted
+  
+    - name: Restart ufw
+      command: ufw reload
+      become: true
