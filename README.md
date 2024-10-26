@@ -9,28 +9,32 @@ How you can use it:
    - change server,clients hosts to ./hosts
 2. Start installation process following next steps, one-by-one
 
-# Install Zabbix server
-ansible-playbook -i hosts playbook-zabbix-agent-70.yml
+- 2.1. Install Zabbix server
+   ansible-playbook -i hosts playbook-zabbix-server-70-nginx-mysql.yml
 
-# Install IP SEC server
-ansible-playbook -i hosts playbook-ipsec-server.yml
+- 2.2. Install IP SEC server
+   ansible-playbook -i hosts playbook-ipsec-server.yml
 
-# Integrate Zabbix with Grafana 
-ansible-playbook -i hosts playbook-server-grafana.yml
-
-
-# Install Zabbix agents
-ansible-playbook -i hosts playbook-agent-70.yml
-
-# Install IP SEC client
-ansible-playbook -i hosts playbook-ipsec-client.yml
+- 2.3 Integrate Zabbix with Grafana 
+   ansible-playbook -i hosts playbook-zabbix-server-add-grafana.yml
 
 
-TO.DO.
-- params via ENV : done
-- test playbook  : done
-- Discovery research & tests: done
-- Implement MAC Address based client logical binding insted IP based client analitycs and Zabbix settings: in progress
+- 2.4 Install Zabbix agents
+   ansible-playbook -i hosts playbook-zabbix-agent-70.yml
 
-Note:
-ansible-playbook -i inventory_file playbook.yml --extra-vars "server_ip=YOUR_SERVER_IP psk_key=YOUR_PSK"
+- 2.5 Install IP SEC client
+   ansible-playbook -i hosts playbook-ipsec-client.yml
+
+
+3. Test installed components 
+   ansible-playbook -i hosts playbook-zabbix-tests.yml
+
+4. TO.DO.
+   - params via ENV : done
+   - test playbook  : done
+   - Discovery research & tests: done
+   - Implement MAC Address based client logical binding insted IP based client analitycs and Zabbix settings: in progress
+
+FAQ:
+Q: how to use vars from cli?
+A: ansible-playbook -i inventory_file playbook.yml --extra-vars "server_ip=YOUR_SERVER_IP psk_key=YOUR_PSK"
