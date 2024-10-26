@@ -4,11 +4,34 @@
   vars_files:
     - zabbix-server.env
   tasks:
-    - name: Update system packages
+
+    - name: Install chrony
+      apt:
+        name: chrony
+        state: present
+
+    - name: Run service - chrony
+      service:
+        name: chrony
+        state: started
+        enabled: yes
+
+    - name: Awiat for time sync
+      command: chronyc waitsync 5
+      register: chrony_sync
+      until: chrony_sync.rc == 0
+      retries: 5
+      delay: 10
+
+    - name: Update OS packages
       apt:
         update_cache: yes
+        upgrade: dist
+      when: chrony_sync.rc == 0
+      become: yes
+      become_user: root
 
-    - name: Install depended packages for "{{ serviceName }}""
+    - name: Install depended packages for {{ serviceName }}
       apt:
         update_cache: yes
         name: "{{ item }}"
@@ -19,7 +42,7 @@
         - nginx
         - php
         - php-mysql
-        - php8.1-fpm
+        - php-fpm
         - snmp
         - php-gd
         - php-xml
@@ -184,13 +207,8 @@
       loop:
         - zabbix-server
         - zabbix-agent
+        - nginx
 
-    - name: Restart Nginx
-      service:
-        name: nginx
-        state: restarted
-      become: yes
-      #become_user: root
 
   handlers:
     - name: Restart Nginx
