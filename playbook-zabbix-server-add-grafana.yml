@@ -23,7 +23,7 @@
         name: grafana
         state: present
 
-    - name: Install plunin Zabbix for Grafana
+    - name: Install Zabbix plugin for Grafana
       grafana_plugin:
         name: alexanderzobnin-zabbix-app
         state: present
@@ -41,21 +41,54 @@
         delay: 10
         timeout: 60
         state: started
+    - name: Reset Grafana admin password using grafana-cli
+      command: grafana-cli --homepath "/usr/share/grafana" admin reset-admin-password "{{ grafana_admin_password }}"
+      environment:
+        GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+
+    - name: Create Service Account
+      uri:
+        url: "http://192.168.124.160:3000/api/serviceaccounts"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Basic YWRtaW46RnJkZmtmeXUyMDIzIQ=="
+        body: |
+          {
+            "name": "automation_service_account2",
+            "role": "Admin"
+          }
+        body_format: json
+        user: "admin"
+        password: "Frdfkfyu2023!"
+        status_code: 
+          - 200
+          - 201
+      register: service_account_response
+      
+
+    - name: Save Service Account ID
+      set_fact:
+        service_account_id: "{{ service_account_response.json.id }}"
+
+    - name: Debug Service Account ID
+      debug:
+        msg: "Service Account ID: {{ service_account_id }}"
+        
 
     - name: Setting up Zabbix in Grafana
       uri:
         url: "http://localhost:3000/api/datasources"
         method: POST
-        user: "admin"
-        password: "admin"
         body_format: json
         headers:
           Content-Type: "application/json"
+          Authorization: "Basic YWRtaW46RnJkZmtmeXUyMDIzIQ=="
         body: |
           {
             "name": "Zabbix",
             "type": "alexanderzobnin-zabbix-datasource",
-            "url": "{{ api_url }},
+            "url": "{{ api_url }}",
             "access": "proxy",
             "basicAuth": false,
             "jsonData": {
@@ -65,22 +98,6 @@
           }
         status_code: 200
       ignore_errors: yes 
-
-    - name: Change defualt password for Grafana
-      uri:
-        url: "http://localhost:3000/api/admin/passwords"
-        method: POST
-        user: "admin"
-        password: "admin"
-        body_format: json
-        headers:
-          Content-Type: "application/json"
-        body: |
-          {
-            "oldPassword": "admin",
-            "newPassword": "{{ grafana_new_password }}"
-          }
-        status_code: 200
 
     - name: Restart Grafana
       service:

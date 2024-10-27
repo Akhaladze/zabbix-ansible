@@ -3,7 +3,7 @@
   hosts: zabbix_agents
   become: yes
   vars_files:
-    - ipsec-client.env  # Файл с переменными для сервера
+    - zabbix-server.env
   tasks:
 
     - name: Install strongSwan and dependencies
@@ -24,8 +24,8 @@
             leftsourceip=%config
             left=%any
             leftauth=psk
-            right={{ server_ip }}
-            rightid={{ server_ip }}
+            right={{ serverIp }}
+            rightid={{ serverIp }}
             rightauth=psk
             auto=start
             dpdaction=restart
@@ -39,7 +39,7 @@
       copy:
         dest: /etc/ipsec.secrets
         content: |
-          : PSK "{{ psk_key }}"
+          : PSK "{{ ipsec_psk_key }}"
         mode: '0600'
 
     - name: Restart strongSwan service

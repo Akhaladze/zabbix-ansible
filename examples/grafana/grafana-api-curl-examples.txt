@@ -1,0 +1,52 @@
+# API Create Service Account
+curl -X GET http://192.168.124.160:3000/api/admin/settings \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic <BASE64 U:P>"
+
+REQ:
+curl -X POST http://192.168.124.160:3000/api/serviceaccounts \
+  -H "Content-Type: application/json" \
+  -u admin:admin \
+  -d '{
+        "name": "automation_service_account4",
+        "role": "Admin"
+      }'
+RESP:
+{"id":2,"name":"automation_service_account","login":"sa-1-automation_service_account","orgId":1,"isDisabled":false,"role":"Admin","tokens":0,"avatarUrl":""}
+
+# API Get Token
+REQ:
+curl -X POST http://192.168.124.160:3000/api/serviceaccounts/2/tokens \
+  -H "Content-Type: application/json" \
+  -u admin:admin \
+  -d '{
+        "name": "automation_token"
+      }'
+RESP:
+{"id":1,"name":"automation_token","key":"123"}
+
+
+
+grafana cli plugins list-remote
+grafana cli plugins install <plugin-id> / grafana cli plugins install <plugin-id> <version>
+grafana cli plugins ls
+grafana cli plugins update-all / grafana cli plugins update <plugin-id>
+grafana cli plugins remove <plugin-id>
+
+
+grafana cli admin
+grafana cli --homepath "/usr/share/grafana" admin reset-admin-password <new password>
+
+// data-migration runs a script that migrates or cleans up data in your database.
+// encrypt-datasource-passwords migrates passwords from unsecured fields to secure_json_data field. 
+// Returns ok unless there is an error. Safe to execute multiple times.
+grafana cli admin data-migration encrypt-datasource-passwords
+
+
+
+id: alexanderzobnin-zabbix-app version: 4.5.6
+
+grafana cli --pluginsDir "/var/lib/grafana/devplugins" plugins install <plugin-id>
+
+
+grafana cli --debug plugins install <plugin-id>

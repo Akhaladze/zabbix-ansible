@@ -3,7 +3,7 @@
   hosts: zabbix_servers
   become: yes
   vars_files:
-    - ipsec.env
+    - zabbix_server.env
   tasks:
 
     - name: Install strongSwan and dependencies
@@ -33,20 +33,20 @@
             rekey=yes
 
           conn myvpn
-            left={{ server_ip }}
-            leftid={{ server_ip }}
-            leftsubnet={{ server_ip }}/32
+            left={{ serverIp }}
+            leftid={{ serverIp }}
+            leftsubnet={{ serverIp }}/32
             leftauth=psk
             right=%any
             rightauth=psk
-            rightsourceip={{ clients_subnet }}
+            rightsourceip={{ ipsec_clients_subnet }}
             auto=add
 
     - name: Create ipsec.secrets file
       copy:
         dest: /etc/ipsec.secrets
         content: |
-          : PSK "{{ psk_key }}"
+          : PSK "{{ ipsec_psk_key }}"
         mode: '0600'
 
     - name: Restart strongSwan service
