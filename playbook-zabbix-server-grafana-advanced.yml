@@ -1,0 +1,9 @@
+---
+- hosts: zabbix_servers
+  become: yes
+  vars_files:
+    - zabbix-server.env
+  tasks:
+    - name: Update packages
+      apt:
+        update_cache: yes

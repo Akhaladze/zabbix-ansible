@@ -150,8 +150,7 @@
           enabled: true
         body_format: json
 
-    - name: Create /home/gnet/dashboard1.json file for import
-      ansible.builtin.import_playbook: playbook-zabbix-server-70-nginx-mysql.yml
+
 
     - name: Import Zabbix dashboards for plugin
       uri:

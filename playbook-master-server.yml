@@ -1,5 +1,8 @@
 ---
+# - ansible.builtin.import_playbook: playbook-ipsec-server.yml
 - ansible.builtin.import_playbook: playbook-zabbix-server-70-nginx-mysql.yml
+- ansible.builtin.import_playbook: task-add-dashboard.yml
 - ansible.builtin.import_playbook: playbook-zabbix-server-add-grafana.yml
-#- ansible.builtin.import_playbook: playbook-ipsec-server.yml
+- ansible.builtin.import_playbook: playbook-zabbix-server-grafana-advanced.yml
+
   
