@@ -4193,6 +4193,6 @@
             "uid": "000000098",
             "version": 78
           }
-        owner: gnet
-        group: gnet
+        owner: root
+        group: root
         mode: '0644'

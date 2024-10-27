@@ -7,3 +7,14 @@
     - name: Update packages
       apt:
         update_cache: yes
+
+    - name: Import Zabbix dashboards for plugin
+      uri:
+        url: "http://localhost:3000/api/dashboards/import"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Basic {{ grafana_basic_auth }}"
+        body: "{{ lookup('file', '/home/gnet/dashboard1.json') }}"
+        body_format: json
+      become: true
