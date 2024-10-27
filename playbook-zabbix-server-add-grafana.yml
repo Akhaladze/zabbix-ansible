@@ -48,7 +48,7 @@
 
     - name: Create Service Account
       uri:
-        url: "http://192.168.124.160:3000/api/serviceaccounts"
+        url: "http://{{ serverIp }}:3000/api/serviceaccounts"
         method: POST
         headers:
           Content-Type: "application/json"
@@ -78,7 +78,7 @@
 
     - name: Setting up Zabbix in Grafana
       uri:
-        url: "http://localhost:3000/api/datasources"
+        url: "http://{{ serverIp }}:3000/api/datasources"
         method: POST
         body_format: json
         headers:
