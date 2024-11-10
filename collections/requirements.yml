@@ -4,5 +4,4 @@ collections:
   - name: community.grafana
   - name: community.mysql  
   - name: community.docker 
-  - name: ansible.posix    
-  - name: ansible.builtin
+  - name: ansible.posix
