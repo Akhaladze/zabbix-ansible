@@ -146,7 +146,7 @@
       become_user: root
 
     - name: Import DB Schema for Zabbix server
-      shell: "zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -u zabbix -p'{{ dbPassword }}' zabbix"
+      shell: "zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -u zabbix -p '{{ dbPassword }}' zabbix"
       args:
         executable: /bin/bash
 
