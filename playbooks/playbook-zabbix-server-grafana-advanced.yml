@@ -15,6 +15,6 @@
         headers:
           Content-Type: "application/json"
           Authorization: "Basic {{ grafana_basic_auth }}"
-        body: "{{ lookup('file', '/home/gnet/dashboard1.json') }}"
+        body: "{{ lookup('file', '/dashboard1.json') }}"
         body_format: json
       become: true
