@@ -6,6 +6,10 @@
     - zabbix-server.env
 
   tasks:
+    - name: Debug environment variables
+      debug:
+        var: zabbix_host
+
     - import_playbook: playbooks/playbook-zabbix-server-70-nginx-mysql.yml
     - import_playbook: playbooks/playbook-zabbix-server-add-grafana.yml
     - import_playbook: playbook-zabbix-server-grafana-advanced.yml
