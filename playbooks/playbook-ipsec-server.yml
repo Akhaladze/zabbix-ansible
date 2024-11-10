@@ -3,7 +3,7 @@
   hosts: zabbix_servers
   become: yes
   vars_files:
-    - ./../zabbix_server.env
+    - ./../zabbix-server.env
   tasks:
 
     - name: Install strongSwan and dependencies
