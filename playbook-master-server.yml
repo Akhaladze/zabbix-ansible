@@ -1,14 +1,11 @@
 ---
 - name: Master Playbook for Zabbix and Grafana setup
-  hosts: zabbix_server
+  hosts: localhost
   become: yes
   vars_files:
-    - zabbix-server.env
-    - zabbix-agent.env
-  tasks:
-  # - ansible.builtin.import_playbook: playbook-ipsec-server.yml
-  - ansible.builtin.import_playbook: playbooks/playbook-zabbix-server-70-nginx-mysql.yml
-  - ansible.builtin.import_playbook: playbooks/playbook-zabbix-server-add-grafana.yml
-  #- ansible.builtin.import_playbook: playbook-zabbix-server-grafana-advanced.yml
+    - /home/gnet/Desktop/zabbix-ansible/playbooks/env_vars.yml
 
-  
+  tasks:
+    - import_playbook: playbooks/playbook-zabbix-server-70-nginx-mysql.yml
+    - import_playbook: playbooks/task-add-dashboard.yml
+    - import_playbook: playbooks/playbook-zabbix-server-add-grafana.yml
