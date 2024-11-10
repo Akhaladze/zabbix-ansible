@@ -2,7 +2,7 @@
 - hosts: zabbix_agents
   become: yes
   vars_files:
-    - zabbix-agent.env
+    - ./../zabbix-agent.env
 
   tasks:
     - name: Update system packages

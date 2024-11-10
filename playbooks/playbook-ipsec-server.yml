@@ -33,9 +33,9 @@
             rekey=yes
 
           conn myvpn
-            left={{ serverIp }}
-            leftid={{ serverIp }}
-            leftsubnet={{ serverIp }}/32
+            left={{ server_ip }}
+            leftid={{ server_ip }}
+            leftsubnet={{ server_ip }}/32
             leftauth=psk
             right=%any
             rightauth=psk
@@ -46,7 +46,7 @@
       copy:
         dest: /etc/ipsec.secrets
         content: |
-          : PSK "{{ ipsec_psk_key }}"
+          : PSK "{{ psk_key }}"
         mode: '0600'
 
     - name: Restart strongSwan service
