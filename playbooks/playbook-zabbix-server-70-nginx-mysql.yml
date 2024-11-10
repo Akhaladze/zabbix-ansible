@@ -2,7 +2,7 @@
 - hosts: zabbix_servers
   become: yes
   vars_files:
-    - ./../zabbix-server.env
+    - zabbix-server.env
   tasks:
 
     - name: Install chrony
