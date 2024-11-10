@@ -5,10 +5,10 @@
   vars_files:
     - zabbix-server.env
     - zabbix-agent.env
-# - ansible.builtin.import_playbook: playbook-ipsec-server.yml
-- ansible.builtin.import_playbook: playbooks/playbook-zabbix-server-70-nginx-mysql.yml
-- ansible.builtin.import_playbook: playbooks/task-add-dashboard.yml
-- ansible.builtin.import_playbook: playbooks/playbook-zabbix-server-add-grafana.yml
-#- ansible.builtin.import_playbook: playbook-zabbix-server-grafana-advanced.yml
+  tasks:
+  # - ansible.builtin.import_playbook: playbook-ipsec-server.yml
+  - ansible.builtin.import_playbook: playbooks/playbook-zabbix-server-70-nginx-mysql.yml
+  - ansible.builtin.import_playbook: playbooks/playbook-zabbix-server-add-grafana.yml
+  #- ansible.builtin.import_playbook: playbook-zabbix-server-grafana-advanced.yml
 
   
