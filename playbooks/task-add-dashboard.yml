@@ -2,11 +2,11 @@
 - hosts: zabbix_servers
   become: yes
   vars_files:
-    - zabbix-server.env
+    - ./../zabbix-server.env
   tasks:
     - name: Create dashboard file for import localy
       copy:
-        dest: /home/gnet/dashboard1.json
+        dest: dashboard.json
         content: |
           {
             "__inputs": [
