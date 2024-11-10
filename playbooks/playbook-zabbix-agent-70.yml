@@ -72,19 +72,19 @@
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: '^Server='
-        line: 'Server={{ serverIp }}'
+        line: 'Server={{ server_ip }}'
 
     - name: Setting up Zabbix агента (ServerActive)
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: '^# ServerActive='
-        line: 'ServerActive={{ serverIp }}'
+        line: 'ServerActive={{ server_ip }}'
 
     - name: Setting up Zabbix agent (Hostname)
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: '^Hostname='
-        line: 'Hostname={{ serverIp }}'
+        line: 'Hostname={{ server_ip }}'
 
     - name: Restart Zabbix agent
       service:
