@@ -248,7 +248,10 @@
         state: present
       notify: Restart Nginx
     
-
+    - name: Restart ufw
+      command: ufw reload
+      become: true
+      
     - name: Restart Zabbix srv and agent
       service:
         name: "{{ item }}"
@@ -266,6 +269,3 @@
         name: nginx
         state: restarted
   
-    - name: Restart ufw
-      command: ufw reload
-      become: true
