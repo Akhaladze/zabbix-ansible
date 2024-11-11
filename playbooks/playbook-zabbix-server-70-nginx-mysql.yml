@@ -161,7 +161,7 @@
 #      args:
 #        executable: /bin/bash
     - name: Import Zabbix DB Schema
-      command: "zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql -u zabbix -p'your_zabbix_db_password' zabbix"
+      command: "zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql -u zabbix -p'{{ dbPassword }}' zabbix"
       args:
         creates: /var/lib/mysql/zabbix  # Replace with a path that indicates schema import success
       become: yes
