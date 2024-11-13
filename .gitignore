@@ -1,4 +1,2 @@
-.env
-*.env
-./zabbix-server.env
-./zabbix-agent.env
+.gitignore
+zabbix-server.env
