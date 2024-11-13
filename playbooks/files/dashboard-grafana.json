@@ -1,14 +1,4 @@
----
-- hosts: zabbix_servers
-  become: yes
-  vars_files:
-    - ./../zabbix-server.env
-  tasks:
-    - name: Create dashboard file for import localy
-      copy:
-        dest: dashboard.json
-        content: |
-          {
+{
             "__inputs": [
               {
                 "name": "DS_ZABBIX34",
@@ -4192,7 +4182,4 @@
             "title": "Zabbix Server Dashboard",
             "uid": "000000098",
             "version": 78
-          }
-        owner: root
-        group: root
-        mode: '0644'
+    }

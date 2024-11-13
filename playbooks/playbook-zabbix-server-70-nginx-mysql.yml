@@ -55,6 +55,7 @@
         - curl
         - nmap
         - ufw
+        
 
 
     - name: Allow port 8080
@@ -155,22 +156,26 @@
 #        login_user: zabbix
 #        login_password: "{{ dbPassword }}"
 #        login_host: localhost
+#    - name: Import Zabbix DB Schema
+#      community.mysql.mysql_db:
+#        name: zabbix
+#        state: import
+#        target: /usr/share/zabbix-sql-scripts/mysql/server.sql.gz
+#        login_user: zabbix
+#        login_password: "{{ dbPassword }}"
+#        login_host: localhost
 
-#    - name: Import DB Schema for Zabbix server
-#      shell: "zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -u zabbix -p '{{ dbPassword }}' zabbix"
-#      args:
-#        executable: /bin/bash
-    - name: Import Zabbix DB Schema
-      command: "zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql -u zabbix -p'{{ dbPassword }}' zabbix"
+    - name: Import DB Schema for Zabbix server
+      shell: "zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -u zabbix -p'{{ dbPassword }}' zabbix"
       args:
-        creates: /var/lib/mysql/zabbix  # Replace with a path that indicates schema import success
-      become: yes
+        executable: /bin/bash
 
     - name: Disable log_bin_trust_function_creators option after importing database schema.
       shell: |
         echo "set global log_bin_trust_function_creators = 0;" | mysql --user=root
       become: yes
       become_user: root
+
     - name: Create zabbix server configuration file
       copy:
         dest: /etc/zabbix/zabbix_server.conf
@@ -184,7 +189,7 @@
           DBUser=zabbix
           DBPassword=Password2023!
           SNMPTrapperFile=/var/log/snmptrap/snmptrap.log
-          StatsAllowedIP=127.0.0.1,192.168.124.0/24,10.0.0.0/8
+          StatsAllowedIP=127.0.0.1,192.168.124.0/24,10.10.100.0/24
           EnableGlobalScripts=1
         owner: root
         group: root
@@ -251,7 +256,7 @@
     - name: Restart ufw
       command: ufw reload
       become: true
-      
+
     - name: Restart Zabbix srv and agent
       service:
         name: "{{ item }}"
@@ -261,6 +266,8 @@
         - zabbix-agent
         - nginx
         - php8.1-fpm
+      become: true
+      become_user: root
 
 
   handlers:
@@ -269,3 +276,4 @@
         name: nginx
         state: restarted
   
+

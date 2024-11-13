@@ -1,0 +1,118 @@
+---
+- hosts: zabbix_servers
+  vars_files:
+    - ./../zabbix-server.env
+
+  become: yes
+  vars:
+    api_url: "http://localhost:8080/api_jsonrpc.php"
+    api_user: "Admin"
+    api_password: "zabbix"
+  tasks:
+    - name: Obtain Zabbix auth token
+      uri:
+        url: "{{ api_url }}"
+        method: POST
+        headers:
+          Content-Type: "application/json-rpc"
+        body: |
+          {
+            "jsonrpc": "2.0",
+            "method": "user.login",
+            "params": {
+              "username": "{{ api_user }}",
+              "password": "{{ api_password }}"
+            },
+            "id": 1
+          }
+        body_format: json
+      register: auth_response
+
+    - name: Check if auth token was retrieved successfully
+      fail:
+        msg: "Failed to authenticate with Zabbix API: {{ auth_response.json.error.message }}"
+      when: auth_response.json.error is defined
+
+    - name: Set auth token
+      set_fact:
+        auth_token: "{{ auth_response.json.result }}"
+
+    - name: Debug auth token
+      debug:
+        msg: "Zabbix Auth Token: {{ auth_token }}"
+
+
+    - name: Add new host client1 to Zabbix
+      uri:
+        url: "{{ api_url }}"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          method: "host.create"
+          params:
+            host: "client1"
+            interfaces:
+              - type: 1
+                main: 1
+                useip: 1
+                ip: "{{ server_ip }}"
+                dns: ""
+                port: "10050"
+            groups:
+              - groupid: "2"
+            templates:
+              - templateid: "10001"
+            status: 0  # 0 - enabled, 1 - disabled
+          auth: "{{ auth_response.json.result }}"
+          id: 1
+      register: add_host_response
+
+    - name: Import template JSON file to Zabbix
+      uri:
+        url: "http://localhost:8080/api_jsonrpc.php"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body: |
+          {
+            "jsonrpc": "2.0",
+            "method": "configuration.import",
+            "params": {
+              "format": "json",
+              "rules": {
+                "templates": {
+                  "createMissing": true,
+                  "updateExisting": true
+                },
+                "items": {
+                  "createMissing": true,
+                  "updateExisting": true
+                },
+                "graphs": {
+                  "createMissing": true,
+                  "updateExisting": true
+                },
+                "triggers": {
+                  "createMissing": true,
+                  "updateExisting": true
+                }
+              },
+              "source": {{ lookup('file', 'zab-tmpl-pi-agent-7-0.json') | to_json }}
+            },
+            "auth": "{{ auth_response.json.result }}",
+            "id": 2
+          }
+        body_format: json
+      register: import_response
+
+    - name: Fail if import failed
+      fail:
+        msg: "Template import failed: {{ import_response.json.error }}"
+      when: import_response.json.error is defined
+
+    - name: Template imported successfully
+      debug:
+        msg: "Template imported successfully!"

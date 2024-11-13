@@ -3,18 +3,38 @@
   become: yes
   vars_files:
     - ./../zabbix-server.env
+    
   tasks:
-    - name: Update packages
-      apt:
-        update_cache: yes
+    - name: Template file
+      ansible.builtin.import_tasks:
+        file: task-add-dashboard1.yml
+      
+    - name: Dashboard file
+      ansible.builtin.import_tasks:
+        file: task-add-dashboard2.yml
 
-    - name: Import Zabbix dashboards for plugin
+    - name: Enable alexanderzobnin-zabbix plugin
+      command: grafana-cli plugins install alexanderzobnin-zabbix-app
+      args:
+        creates: "/var/lib/grafana/plugins/alexanderzobnin-zabbix-app"
+      register: plugin_install
+
+    - name: Enable Zabbix plugin in Grafana
       uri:
-        url: "http://localhost:3000/api/dashboards/import"
+        url: "http://localhost:3000/api/plugins/alexanderzobnin-zabbix-app/settings"
         method: POST
         headers:
           Content-Type: "application/json"
           Authorization: "Basic {{ grafana_basic_auth }}"
-        body: "{{ lookup('file', 'dashboard.json') }}"
+        body:
+          enabled: true
         body_format: json
-      become: true
+
+    - name: Import Grafana dashboard foo
+      community.grafana.grafana_dashboard:
+        grafana_url: "http://localhost:3000/api/dashboards/db"
+        grafana_api_key: "{{ grafana_api_token }}"
+        state: present
+        commit_message: Updated by ansible
+        overwrite: true
+        path: "dashboard-grafana.json"
