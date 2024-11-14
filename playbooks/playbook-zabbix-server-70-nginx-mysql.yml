@@ -164,11 +164,18 @@
 #        login_user: zabbix
 #        login_password: "{{ dbPassword }}"
 #        login_host: localhost
-
     - name: Import DB Schema for Zabbix server
-      shell: "zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -u zabbix -p'{{ dbPassword }}' zabbix"
+      shell: |
+        zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -u zabbix -p'{{ dbPassword }}' zabbix
       args:
         executable: /bin/bash
+      register: import_result
+      ignore_errors: true
+
+    - name: Check if the import encountered 'already exists' error
+      fail:
+        msg: "DB import failed with an unexpected error: {{ import_result.stderr }}"
+      when: "'ERROR 1050' not in import_result.stderr and import_result.rc != 0"
 
     - name: Disable log_bin_trust_function_creators option after importing database schema.
       shell: |
