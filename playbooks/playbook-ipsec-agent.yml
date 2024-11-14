@@ -56,3 +56,15 @@
 
     - name: Apply sysctl changes
       command: sysctl -p
+
+
+    - name: Restart strongSwan service
+      service:
+        name: ipsec
+        state: restarted
+        enabled: yes
+
+
+    - name: Run IPSEC Tunnel
+      ansible.builtin.shell:
+      

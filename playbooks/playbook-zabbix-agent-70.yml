@@ -24,7 +24,7 @@
         port: 10050
         proto: tcp
     
-    - name: Allow port 10051 (Zabbix Server) 
+    - name: Allow port 10051 (Zabbix Server)
       ufw:
         rule: allow
         port: 10051
@@ -47,8 +47,7 @@
         state: enabled
         policy: allow
 
-
-    - name: Install depended packages
+    - name: Install dependent packages
       apt:
         update_cache: yes
 
@@ -63,34 +62,49 @@
       register: install_zabbix_agent
       ignore_errors: yes
       
-    - name: Enable Zabbix agent 
+    - name: Enable Zabbix agent
       apt:
         name: zabbix-agent
         state: present
 
-    - name: Add zabbix server ip Zabbix agent
+    - name: Get MAC address of ensp1s0 interface
+      command: ip link show ensp1s0 | grep -oP '(?<=ether\s)[\da-fA-F:]{17}'
+      register: mac_address
+      changed_when: false
+
+    - name: Set client MAC as variable
+      set_fact:
+        client_mac: "{{ mac_address.stdout | replace(':', '') }}"
+
+    - name: Configure Zabbix server IP in agent config
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: '^Server='
         line: 'Server={{ server_ip }}'
 
-    - name: Setting up Zabbix агента (ServerActive)
+    - name: Set ServerActive parameter in Zabbix agent config
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: '^# ServerActive='
         line: 'ServerActive={{ server_ip }}'
 
-    - name: Setting up Zabbix agent (Hostname)
+    - name: Configure Zabbix agent Hostname with MAC address
       lineinfile:
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: '^Hostname='
-        line: 'Hostname={{ server_ip }}'
+        line: 'Hostname=client-{{ client_mac }}'
+
+    - name: Disable Apache2 service if installed
+      service:
+        name: apache2
+        state: stopped
+        enabled: no
+      ignore_errors: true
 
     - name: Restart Zabbix agent
       service:
         name: zabbix-agent
         state: restarted
-
 
   handlers:
     - name: Restart ufw
