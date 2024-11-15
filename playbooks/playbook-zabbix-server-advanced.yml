@@ -1,20 +1,19 @@
 ---
 - hosts: zabbix_servers
+  become: true
   vars_files:
     - ./../zabbix-server.env
 
-  become: yes
-  vars:
-    api_url: "http://localhost:8080/api_jsonrpc.php"
-    api_user: "Admin"
-    api_password: "zabbix"
   tasks:
-    - name: Obtain Zabbix auth token
+    - name: Add dashboard
+      ansible.builtin.import_tasks: task-add-dashboard2.yml
+  
+    - name: Authenticate with Zabbix API
       uri:
         url: "{{ api_url }}"
         method: POST
         headers:
-          Content-Type: "application/json-rpc"
+          Content-Type: "application/json"
         body: |
           {
             "jsonrpc": "2.0",
@@ -28,51 +27,76 @@
         body_format: json
       register: auth_response
 
-    - name: Check if auth token was retrieved successfully
+    - name: Fail if authentication fails
       fail:
-        msg: "Failed to authenticate with Zabbix API: {{ auth_response.json.error.message }}"
+        msg: "Authentication failed: {{ auth_response.json.error.data }}"
       when: auth_response.json.error is defined
 
-    - name: Set auth token
-      set_fact:
-        auth_token: "{{ auth_response.json.result }}"
-
-    - name: Debug auth token
-      debug:
-        msg: "Zabbix Auth Token: {{ auth_token }}"
-
-
-    - name: Add new host client1 to Zabbix
+    - name: Get Action ID
       uri:
         url: "{{ api_url }}"
         method: POST
         headers:
           Content-Type: "application/json"
+        body: |
+          {
+            "jsonrpc": "2.0",
+            "method": "action.get",
+            "params": {
+              "output": ["actionid", "name"],
+              "filter": {
+                "name": ["{{ action_name }}"]
+              }
+            },
+            "auth": "{{ auth_response.json.result }}",
+            "id": 2
+          }
         body_format: json
-        body:
-          jsonrpc: "2.0"
-          method: "host.create"
-          params:
-            host: "client1"
-            interfaces:
-              - type: 1
-                main: 1
-                useip: 1
-                ip: "{{ server_ip }}"
-                dns: ""
-                port: "10050"
-            groups:
-              - groupid: "2"
-            templates:
-              - templateid: "10001"
-            status: 0  # 0 - enabled, 1 - disabled
-          auth: "{{ auth_response.json.result }}"
-          id: 1
-      register: add_host_response
+      register: action_response
 
-    - name: Import template JSON file to Zabbix
+    - name: Fail if action not found
+      fail:
+        msg: "Action '{{ action_name }}' not found."
+      when: action_response.json.result | length == 0
+
+    - name: Set actionid fact
+      set_fact:
+        action_id: "{{ action_response.json.result[0].actionid }}"
+
+    - name: Enable the action
       uri:
-        url: "http://localhost:8080/api_jsonrpc.php"
+        url: "{{ api_url }}"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body: |
+          {
+            "jsonrpc": "2.0",
+            "method": "action.update",
+            "params": {
+              "actionid": "{{ action_id }}",
+              "status": 0
+            },
+            "auth": "{{ auth_response.json.result }}",
+            "id": 3
+          }
+        body_format: json
+      register: enable_action_response
+
+
+    - name: Fail if authentication fails
+      fail:
+        msg: "Authentication failed: {{ auth_response.json.error.data }}"
+      when: auth_response.json.error is defined
+
+    - name: Read template file
+      slurp:
+        src: "{{ template_file }}"
+      register: template_content
+
+    - name: Import template to Zabbix
+      uri:
+        url: "{{ api_url }}"
         method: POST
         headers:
           Content-Type: "application/json"
@@ -98,21 +122,140 @@
                 "triggers": {
                   "createMissing": true,
                   "updateExisting": true
+                },
+                "valueMaps": {
+                  "createMissing": true,
+                  "updateExisting": true
+                },
+                "templateScreens": {
+                  "createMissing": true,
+                  "updateExisting": true
                 }
               },
-              "source": {{ lookup('file', 'zab-tmpl-pi-agent-7-0.json') | to_json }}
+              "source": "{{ template_content.content | b64decode }}"
             },
             "auth": "{{ auth_response.json.result }}",
             "id": 2
           }
         body_format: json
       register: import_response
+      ignore_errors: true
 
-    - name: Fail if import failed
+    - name: Fail if template import fails
       fail:
-        msg: "Template import failed: {{ import_response.json.error }}"
+        msg: "Failed to import template: {{ import_response.json.error.data }}"
       when: import_response.json.error is defined
+      ignore_errors: true
 
-    - name: Template imported successfully
+    - name: Debug import response
       debug:
         msg: "Template imported successfully!"
+
+    - name: Get template ID
+      uri:
+        url: "{{ api_url }}"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body: |
+          {
+            "jsonrpc": "2.0",
+            "method": "template.get",
+            "params": {
+              "output": ["templateid"],
+              "filter": {
+                "host": ["{{ template_name }}"]
+              }
+            },
+            "auth": "{{ auth_response.json.result }}",
+            "id": 4
+          }
+        body_format: json
+      register: template_response
+
+    - name: Set templateid fact
+      set_fact:
+        template_id: "{{ template_response.json.result[0].templateid }}"
+      ignore_errors: true
+
+    - name: Update action operations
+      uri:
+        url: "{{ api_url }}"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body: |
+          {
+            "jsonrpc": "2.0",
+            "method": "action.update",
+            "params": {
+              "actionid": "{{ action_id }}",
+              "operations": [
+                {
+                  "operationtype": 6,
+                  "optemplate": [
+                    {
+                      "templateid": "{{ template_id }}"
+                    }
+                  ]
+                }
+              ]
+            },
+            "auth": "{{ auth_response.json.result }}",
+            "id": 5
+          }
+        body_format: json
+      register: update_operations_response
+    
+    - name: Fail if update operations fails
+      fail:
+        msg: "Failed to update action operations: {{ update_operations_response.json.error.data }}"
+      when: update_operations_response.json.error is defined
+
+    - name: Debug update operations response
+      debug:
+        msg: "Action operations updated successfully!"
+    - name: Add discovery rule
+      ansible.builtin.import_tasks: task-add-discovery-rule.yml
+      ignore_errors: true
+    
+
+  #  - name: Remove condition rule 2
+  #    uri:
+  #      url: "{{ api_url }}"
+  #      method: POST
+  #      headers:
+  #        Content-Type: "application/json"
+  #      body: |
+  #        {
+  #          "jsonrpc": "2.0",
+  #          "method": "action.update",
+  #          "params": {
+  #            "actionid": "{{ action_id }}",
+  #            "filter": {
+  #              "evaltype": 1,
+  #              "conditions": [
+  #                {
+  #                  "conditiontype": 1,
+  #                  "operator": 2,
+  #                  "value": ""
+  #                }
+  #              ]
+  #            }
+  #          },
+  #          "auth": "{{ auth_response.json.result }}",
+  #          "id": 6
+  #        }
+  #      body_format: json
+  #    register: remove_condition_response
+
+    - name: Debug action update
+      debug:
+        msg: "Action '{{ action_name }}' updated successfully."
+
+
+    - name: Reenable and start zabbix
+      ansible.builtin.service:
+        name: zabbix-server
+        enabled: true
+        state: started

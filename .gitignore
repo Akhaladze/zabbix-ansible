@@ -1,2 +1,5 @@
 .gitignore
 zabbix-server.env
+.venv
+.vscode
+zabbix-agent.env

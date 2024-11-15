@@ -274,6 +274,7 @@
         - nginx
         - php8.1-fpm
       become: true
+      enabled: true
       become_user: root
 
 

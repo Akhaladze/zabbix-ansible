@@ -1,2 +1,4 @@
 ---
-- ansible.builtin.import_playbook: playbooks/playbook-zabbix-server-grafana-advanced.yml
+ - ansible.builtin.import_playbook: playbooks/playbook-debug.yml
+#- ansible.builtin.import_playbook: playbooks/playbook-zabbix-server-advanced.yml
+#- ansible.builtin.import_playbook: playbooks/playbook-zabbix-server-grafana-advanced.yml

@@ -4,4 +4,6 @@ collections:
   - name: community.grafana
   - name: community.mysql  
   - name: community.docker 
+  - name: community.zabbix
+  - name: community.postgresql
   - name: ansible.posix
