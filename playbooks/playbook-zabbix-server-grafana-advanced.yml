@@ -5,6 +5,14 @@
     - ./../zabbix-server.env
     
   tasks:
+    - name: Reenable and start zabbix
+      ansible.builtin.service:
+        name: zabbix-server
+        enabled: true
+        state: started
+      
+        
+    
     - name: Template file
       ansible.builtin.import_tasks:
         file: task-add-dashboard1.yml
