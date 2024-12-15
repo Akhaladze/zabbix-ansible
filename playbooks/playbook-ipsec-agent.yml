@@ -1,10 +1,17 @@
----
 - name: Set up VPN client with strongSwan on Ubuntu 22.04
   hosts: zabbix_agents
-  become: yes
+  become: true
   vars_files:
     - ./../zabbix-agent.env
   tasks:
+    - name: Ensure Python3 is installed
+      raw: |
+        if ! command -v python3 &> /dev/null; then
+          apt-get update && apt-get install -y python3
+        fi
+    - name: Set Python interpreter for Ansible
+      ansible.builtin.set_fact:
+        ansible_python_interpreter: /usr/bin/python3
 
     - name: Install strongSwan and dependencies
       apt:
@@ -53,18 +60,4 @@
         name: net.ipv4.ip_forward
         value: '1'
         state: present
-
-    - name: Apply sysctl changes
-      command: sysctl -p
-
-
-    - name: Restart strongSwan service
-      service:
-        name: ipsec
-        state: restarted
-        enabled: yes
-
-
-    - name: Run IPSEC Tunnel
-      ansible.builtin.shell:
-      
+      become: true
