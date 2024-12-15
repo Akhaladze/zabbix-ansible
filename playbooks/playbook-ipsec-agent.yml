@@ -13,6 +13,15 @@
       ansible.builtin.set_fact:
         ansible_python_interpreter: /usr/bin/python3
 
+    - name: Update system packages
+      apt:
+        update_cache: yes
+        name: "{{ item }}"
+        state: present
+      loop:
+        - strongswan
+        - wget
+
     - name: Install strongSwan and dependencies
       apt:
         name: strongswan
