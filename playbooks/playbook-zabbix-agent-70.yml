@@ -16,36 +16,11 @@
         - mc
         - curl
         - nmap
-        - ufw
+        - net-tools
+        - iputils-ping
+      
+      #  - ufw
 
-    - name: Allow port 10050 (Zabbix Agent)
-      ufw:
-        rule: allow
-        port: 10050
-        proto: tcp
-    
-    - name: Allow port 10051 (Zabbix Server)
-      ufw:
-        rule: allow
-        port: 10051
-        proto: tcp
-
-    - name: Allow port 22 (SSH)
-      ufw:
-        rule: allow
-        port: 22
-        proto: tcp
-
-    - name: Allow port 162 (SNMP)
-      ufw:
-        rule: allow
-        port: 162
-        proto: udp
-  
-    - name: Enable and restart ufw
-      ufw:
-        state: enabled
-        policy: allow
 
     - name: Install dependent packages
       apt:
@@ -60,17 +35,18 @@
       apt:
         deb: "/tmp/zabbix-release_latest+debian12_all.deb"
       register: install_zabbix_agent
-      ignore_errors: yes
+      ignore_errors: true
       
     - name: Enable Zabbix agent
       apt:
         name: zabbix-agent
         state: present
 
-    - name: Get MAC address of ensp1s0 interface
-      command: ip link show ensp1s0 | grep -oP '(?<=ether\s)[\da-fA-F:]{17}'
+    - name: Get MAC address of eth0 interface
+      shell: ip link show eth0 | grep -oP '(?<=ether\s)[\da-fA-F:]{17}'
       register: mac_address
       changed_when: false
+      become: true
 
     - name: Set client MAC as variable
       set_fact:
@@ -93,13 +69,6 @@
         path: /etc/zabbix/zabbix_agentd.conf
         regexp: '^Hostname='
         line: 'Hostname=client-{{ client_mac }}'
-
-    - name: Disable Apache2 service if installed
-      service:
-        name: apache2
-        state: stopped
-        enabled: no
-      ignore_errors: true
 
     - name: Restart Zabbix agent
       service:

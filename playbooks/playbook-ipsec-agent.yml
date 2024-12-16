@@ -28,6 +28,13 @@
         state: present
         update_cache: yes
 
+    # Enable IPsec service
+    - name: Enable strongSwan service
+      service:
+        name: ipsec
+        state: started
+        enabled: yes
+        
     - name: Create ipsec.conf for client
       copy:
         dest: /etc/ipsec.conf

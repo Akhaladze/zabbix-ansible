@@ -262,20 +262,12 @@
     
     - name: Restart ufw
       command: ufw reload
-      become: true
-
-    - name: Restart Zabbix srv and agent
-      service:
-        name: "{{ item }}"
+    
+    - name: Restart Nginx
+      systemd:
+        name: nginx
         state: restarted
-      loop:
-        - zabbix-server
-        - zabbix-agent
-        - nginx
-        - php8.1-fpm
-      become: true
-      enabled: true
-      become_user: root
+        
 
 
   handlers:
