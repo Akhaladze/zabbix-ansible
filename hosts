@@ -1,5 +1,5 @@
 [zabbix_servers]
-zabbix_host ansible_host=192.168.100.176 ansible_user=gnet ansible_become_password=Frdfkfyu2023!
+zabbix_host ansible_host=10.10.80.100 ansible_user=gnet ansible_become_password=Frdfkfyu2023!
 [zabbix_agents]
 client-0 ansible_host=10.10.40.130 ansible_user=gnet ansible_become_password=Frdfkfyu2023!
 client-1 ansible_host=10.10.40.131 ansible_user=gnet ansible_become_password=Frdfkfyu2023!
