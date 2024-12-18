@@ -20,8 +20,8 @@
             charondebug="ike 1, knl 0, net 0, enc 0, cfg 2"
 
           conn %default
-            keyexchange=ikev2
-            ikelifetime=60m
+            keyexchange=ikev3
+            ikelifetime=61m
             lifetime=20m
             rekeymargin=3m
             keyingtries=%forever

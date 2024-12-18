@@ -68,15 +68,18 @@
           - 200
           - 201
       register: service_account_response
+      ignore_errors: true
       
 
     - name: Save Service Account ID
       set_fact:
         service_account_id: "{{ service_account_response.json.id }}"
+      ignore_errors: true
 
     - name: Debug Service Account ID
       debug:
         msg: "Service Account ID: {{ service_account_id }}"
+      ignore_errors: true
         
 
     - name: Setting up Zabbix in Grafana

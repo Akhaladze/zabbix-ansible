@@ -206,6 +206,7 @@
           }
         body_format: json
       register: update_operations_response
+      ignore_errors: true
     
     - name: Fail if update operations fails
       fail:
