@@ -1,6 +1,6 @@
 ---
 - hosts: zabbix_servers
-  become: yes
+  become: true
   vars_files:
     - ./../zabbix-server.env
   tasks:
@@ -103,7 +103,7 @@
             }
           }
         status_code: 200
-      ignore_errors: yes 
+      ignore_errors: true 
 
     - name: Restart Grafana
       service:

@@ -1,4 +1,3 @@
 ---
-
 - ansible.builtin.import_playbook: playbooks/playbook-ipsec-agent.yml
 - ansible.builtin.import_playbook: playbooks/playbook-zabbix-agent-70.yml

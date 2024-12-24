@@ -1,4 +1,5 @@
 .gitignore
+.dockerignore
 zabbix-server.env
 .venv
 .vscode

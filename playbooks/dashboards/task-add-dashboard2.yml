@@ -1,10 +1,10 @@
-- name: Create dashboard file for import localy
+- name: Create template for import localy
   copy:
     dest: zab-tmpl-pi-agent-7-0.json
     content: |
       {
         "zabbix_export": {
-          "version": "6.0",
+          "version": "7.0",
           "date": "2024-11-11T22:51:16Z",
           "groups": [
             {
@@ -424,6 +424,6 @@
           ]
         }
       }
-    owner: gnet
-    group: gnet
+    owner: user
+    group: user 
     mode: '0777'

@@ -4536,6 +4536,6 @@
         "uid": "000000098",
         "version": 3
       }
-    owner: gnet
-    group: gnet
+    owner: user
+    group: user
     mode: '0644'

@@ -1,7 +1,7 @@
 - hosts: zabbix_servers
   vars_files:
     - ./../zabbix-server.env
-  become: yes
+  become: true
   tasks:
     - name: Install locales package
       apt:

@@ -1,6 +1,6 @@
 ---
 - hosts: zabbix_servers
-  become: yes
+  become: true
   vars_files:
     - ./../zabbix-server.env
   tasks:
@@ -28,7 +28,7 @@
         update_cache: yes
         upgrade: dist
       when: chrony_sync.rc == 0
-      become: yes
+      become: true
       become_user: root
 
     - name: Install depended packages for {{ serviceName }}
@@ -63,14 +63,14 @@
         rule: allow
         port: 8080
         proto: tcp
-      become: yes
+      become: true
 
     - name: Allow port 10050 (Zabbix Agent)
       ufw:
         rule: allow
         port: 10050
         proto: tcp
-      become: yes
+      become: true
       
     - name: Allow port 10051 (Zabbix Agent) 
       ufw:
@@ -109,16 +109,19 @@
       get_url:
         url: "https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest+ubuntu22.04_all.deb"
         dest: "/tmp/zabbix-release_latest+ubuntu22.04_all.deb"
+      become: true
 
     - name: Install Zabbix 7.0 LTS
       apt:
         deb: "/tmp/zabbix-release_latest+ubuntu22.04_all.deb"
       register: install_zabbix_server
-      ignore_errors: yes
+      ignore_errors: true
+      become: true
 
     - name:  Update system packages
       apt:
         update_cache: yes
+      become: true
 
     - name: Install Zabbix server
       apt:
@@ -129,6 +132,7 @@
           - zabbix-agent
           - zabbix-nginx-conf
         state: present
+      become: true
 
 
     - name: Install PyMySQL for Python 3
@@ -139,13 +143,13 @@
     - name: DB creation (Unix socket)
       shell: |
         echo "CREATE DATABASE IF NOT EXISTS zabbix character set utf8mb4 collate utf8mb4_bin;" | mysql --user=root
-      become: yes
+      become: true
       become_user: root
 
     - name: Create DB user (Unix socket)
       shell: |
         echo "CREATE USER IF NOT EXISTS 'zabbix'@'localhost' IDENTIFIED BY '{{ dbPassword }}'; GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost'; set global log_bin_trust_function_creators = 1;" | mysql --user=root
-      become: yes
+      become: true
       become_user: root
 
 #    - name: Import Zabbix DB Schema
@@ -180,7 +184,7 @@
     - name: Disable log_bin_trust_function_creators option after importing database schema.
       shell: |
         echo "set global log_bin_trust_function_creators = 0;" | mysql --user=root
-      become: yes
+      become: true
       become_user: root
 
     - name: Create zabbix server configuration file
@@ -262,6 +266,14 @@
     
     - name: Restart ufw
       command: ufw reload
+    
+    - name: Disable apache2
+      service:
+        name: apache2
+        state: stopped
+        enabled: no
+      become: true
+
     
     - name: Restart Nginx
       systemd:

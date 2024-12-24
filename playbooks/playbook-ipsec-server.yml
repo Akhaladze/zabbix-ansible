@@ -1,7 +1,7 @@
 ---
 - name: Set up VPN with strongSwan on Ubuntu 22.04
   hosts: zabbix_servers
-  become: yes
+  become: true
   vars_files:
     - ./../zabbix-server.env
   tasks:
@@ -17,7 +17,7 @@
         dest: /etc/ipsec.conf
         content: |
           config setup
-            charondebug="ike 1, knl 0, net 0, enc 0, cfg 2"
+            charondebug="ike 2, knl 2, net 2, enc 2, cfg 2"
 
           conn %default
             keyexchange=ikev3
@@ -41,6 +41,8 @@
             rightauth=psk
             rightsourceip={{ ipsec_clients_subnet }}
             auto=add
+            mobike=yes
+            keep_alive=10s
 
     - name: Create ipsec.secrets file
       copy:
@@ -49,11 +51,7 @@
           : PSK "{{ psk_key }}"
         mode: '0600'
 
-    - name: Restart strongSwan service
-      service:
-        name: ipsec
-        state: restarted
-        enabled: yes
+
 
     - name: Enable IP forwarding
       sysctl:
@@ -64,3 +62,8 @@
     - name: Apply sysctl changes
       command: sysctl -p
 
+    - name: Restart strongSwan service
+      service:
+        name: ipsec
+        state: restarted
+        enabled: yes
